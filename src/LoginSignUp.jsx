@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "./api/axios"; // Update this path based on your folder structure
 
 const LoginSignUp = () => {
   const navigate = useNavigate();
@@ -10,15 +11,47 @@ const LoginSignUp = () => {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically handle authentication
-    console.log("Form submitted:", formData);
-
-    // Navigate to home page after successful submission
-    navigate("/home");
+    setError("");
+    
+    try {
+      if (isLogin) {
+        // Handle Login
+        const response = await api.post("/api/v1/signin", {
+          username: formData.name,
+          password: formData.password
+        });
+        
+        localStorage.setItem("token", response.data.token);
+        api.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+        
+        console.log("Login successful");
+        navigate("/home");
+      } else {
+        // Handle Sign Up
+        const response = await api.post("/api/v1/signup", {
+          username: formData.name,
+          password: formData.password,
+          userEmail: formData.email
+        });
+        
+        console.log("Signup successful");
+        setIsLogin(true);
+      }
+    } catch (error) {
+      console.error("Error details:", error.response || error);
+      setError(
+        error.response?.data?.message || 
+        "An error occurred. Please try again."
+      );
+    }
   };
+
+  // Rest of your component remains the same...
+  // (Previous JSX and other functions remain unchanged)
 
   const handleChange = (e) => {
     setFormData({
@@ -41,40 +74,46 @@ const LoginSignUp = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {!isLogin && (
-            <div className="relative">
-              <User
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                // required
-              />
-            </div>
-          )}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
-            <Mail
+            <User
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               size={20}
             />
             <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
+              type="text"
+              name="name"
+              placeholder="Username"
+              value={formData.name}
               onChange={handleChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              // required
+              required
             />
           </div>
+
+          {!isLogin && (
+            <div className="relative">
+              <Mail
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                required
+              />
+            </div>
+          )}
 
           <div className="relative">
             <Lock
@@ -88,7 +127,7 @@ const LoginSignUp = () => {
               value={formData.password}
               onChange={handleChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              // required
+              required
             />
           </div>
 
@@ -102,7 +141,11 @@ const LoginSignUp = () => {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError("");
+              setFormData({ name: "", email: "", password: "" });
+            }}
             className="text-blue-600 hover:underline"
           >
             {isLogin

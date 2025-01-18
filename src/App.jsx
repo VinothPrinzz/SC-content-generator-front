@@ -7,6 +7,9 @@ import Twitter from "./mediaCards/Twitter";
 import Linkden from "./mediaCards/Linkden";
 import Instagram from "./mediaCards/Instagram";
 import Stats from "./sidebarComponets/Stats";
+import EditPost from './EditPost'
+import Schedule from "./sidebarComponets/Schedule";
+import Analytics from "./sidebarComponets/Analysis";
 
 const App = () => {
   return (
@@ -14,7 +17,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={<LoginSignUp />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/edit-post/:postId" element={<EditPost />} />
+        <Route path="/schedule" element={<Schedule />} />
         <Route path="/media" element={<Media />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="/media/linkden" element={<Linkden />} />
         <Route path="/media/instagram" element={<Instagram />} />
         <Route path="/media/twitter" element={<Twitter />} />
