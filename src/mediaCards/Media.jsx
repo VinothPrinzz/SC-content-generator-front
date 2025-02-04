@@ -1,18 +1,33 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate} from "react-router-dom";
 import { Home, ChevronRight } from "lucide-react";
+import SocialAuthCheck from "../components/SocialAuthCheck";
+import api from '../api/axios'
 import "../index.css";
 
 const Media = () => {
+  const [checkingPlatform, setCheckingPlatform] = useState(null);
   const navigate = useNavigate();
 
-  const handleNavigation = (path) => {
-    navigate(path);
+  const handlePlatformClick = async (platform) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.get(`/api/v1/social-accounts/check/${platform}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.isConnected) {
+        navigate(`/media/${platform.toLowerCase()}`);
+      } else {
+        setCheckingPlatform(platform);
+      }
+    } catch (error) {
+      setCheckingPlatform(platform);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white p-6">
-      {/* Home Button */}
       <div className="absolute top-4 left-4">
         <button 
           onClick={() => window.location.href = "/home"}
@@ -23,16 +38,14 @@ const Media = () => {
         </button>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto pt-16">
         <h1 className="text-4xl font-semibold text-gray-800 text-center mb-3">Create posts with AI</h1>
         <p className="text-xl text-gray-600 text-center mb-16">Choose your platform to work with AI</p>
 
-        {/* Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* LinkedIn Card */}
           <div 
-            onClick={() => handleNavigation("/media/linkden")}
+            onClick={() => handlePlatformClick('LinkedIn')}
             className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer"
           >
             <div className="h-48 mb-4 bg-pink-50 rounded-lg flex items-center justify-center">
@@ -55,8 +68,8 @@ const Media = () => {
 
           {/* Instagram Card */}
           <div 
-            onClick={() => handleNavigation("/media/instagram")}
-            className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+            onClick={() => handlePlatformClick('Instagram')}
+            className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer"
           >
             <div className="h-48 mb-4 bg-purple-50 rounded-lg flex items-center justify-center">
               <div className="relative">
@@ -77,7 +90,7 @@ const Media = () => {
 
           {/* Twitter Card */}
           <div 
-            onClick={() => handleNavigation("/media/twitter")}
+            onClick={() => handlePlatformClick('Twitter')}
             className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer"
           >
             <div className="h-48 mb-4 bg-purple-50 rounded-lg flex items-center justify-center">
@@ -99,6 +112,13 @@ const Media = () => {
           </div>
         </div>
       </div>
+
+      {checkingPlatform && (
+        <SocialAuthCheck 
+          platform={checkingPlatform}
+          onClose={() => setCheckingPlatform(null)}
+        />
+      )}
     </div>
   );
 };

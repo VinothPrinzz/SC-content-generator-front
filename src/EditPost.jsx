@@ -15,13 +15,8 @@ const EditPost = () => {
     scheduledTime: ''
   });
 
-  useEffect(() => {
-    fetchPost();
-  }, [postId]);
-
   const fetchPost = async () => {
     try {
-      console.log('Fetching post with ID:', postId);
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/');
@@ -32,27 +27,22 @@ const EditPost = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Transform the response data to match our form structure
-      const postData = response.data;
       setPost({
-        content: postData.content || '',
-        caption: postData.caption || '',
-        hashtags: postData.hashtags || '',
-        scheduledTime: postData.scheduledTime || ''
+        content: response.data.content || '',
+        caption: response.data.caption || '',
+        hashtags: response.data.hashtags || '',
+        scheduledTime: response.data.scheduledTime || ''
       });
     } catch (error) {
-      console.error('Error fetching post:', error);
-      if (error.response) {
-        setError(`Error: ${error.response.data.message || 'Failed to fetch post'}`);
-      } else if (error.request) {
-        setError('No response received from server');
-      } else {
-        setError(`Error: ${error.message}`);
-      }
+      setError('Failed to load post');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPost();
+  }, [postId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,8 +64,7 @@ const EditPost = () => {
       
       navigate('/home');
     } catch (error) {
-      console.error('Error updating post:', error);
-      setError('Failed to update post. Please try again.');
+      setError('Failed to update post');
     } finally {
       setLoading(false);
     }
@@ -91,7 +80,6 @@ const EditPost = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -116,7 +104,6 @@ const EditPost = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-8">
         {error && (
           <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
@@ -125,7 +112,6 @@ const EditPost = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
-          {/* Content */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Content
@@ -140,7 +126,6 @@ const EditPost = () => {
             />
           </div>
 
-          {/* Caption */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Caption
@@ -155,7 +140,6 @@ const EditPost = () => {
             />
           </div>
 
-          {/* Hashtags */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Hashtags
@@ -170,7 +154,6 @@ const EditPost = () => {
             />
           </div>
 
-          {/* Scheduled Time */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Schedule Time

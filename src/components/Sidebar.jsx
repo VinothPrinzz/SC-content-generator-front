@@ -7,6 +7,7 @@ import {
   FileText,
   GlassesIcon,
   Grid2X2Icon,
+  Users
 } from 'lucide-react';
 
 const Sidebar = ({ userData }) => {
@@ -72,6 +73,15 @@ const Sidebar = ({ userData }) => {
           >
             <Grid2X2Icon size={22} />
             <span>Stats</span>
+          </button>
+          <button
+            onClick={() => navigate("/social-accounts")}
+            className={`w-full flex items-center space-x-3 p-3 text-gray-700 rounded-lg transition-colors ${
+            isActive("/social-accounts") ? "bg-gray-200" : "hover:bg-gray-100"
+            }`}
+          >
+            <Users size={22} />
+            <span>Social Accounts</span>
           </button>
         </div>
       </nav>

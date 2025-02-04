@@ -94,40 +94,26 @@ const Instagram = () => {
   });
 
   const industries = [
-    "Technology",
-    "Fashion",
-    "Food & Beverage",
-    "Health & Wellness",
-    "Travel",
-    "Education",
-    "Other"
+    "Technology", "Fashion", "Food & Beverage", "Health & Wellness",
+    "Travel", "Education", "Other"
   ];
 
   const tones = [
-    "Professional",
-    "Casual",
-    "Humorous",
-    "Inspirational",
-    "Educational",
-    "Promotional",
-    "Other"
+    "Professional", "Casual", "Humorous", "Inspirational",
+    "Educational", "Promotional", "Other"
   ];
 
   const handleAddTag = (value, type) => {
     if (!value.trim()) return;
     
-    if (type === 'industry') {
-      if (!selectedIndustries.includes(value.trim())) {
-        setSelectedIndustries([...selectedIndustries, value.trim()]);
-        setIndustryInput("");
-        setIsIndustryOpen(false);
-      }
-    } else {
-      if (!selectedTones.includes(value.trim())) {
-        setSelectedTones([...selectedTones, value.trim()]);
-        setToneInput("");
-        setIsToneOpen(false);
-      }
+    if (type === 'industry' && !selectedIndustries.includes(value.trim())) {
+      setSelectedIndustries([...selectedIndustries, value.trim()]);
+      setIndustryInput("");
+      setIsIndustryOpen(false);
+    } else if (!selectedTones.includes(value.trim())) {
+      setSelectedTones([...selectedTones, value.trim()]);
+      setToneInput("");
+      setIsToneOpen(false);
     }
   };
 
@@ -150,7 +136,6 @@ const Instagram = () => {
       }
       return;
     }
-    
     handleAddTag(option, type);
   };
 
@@ -172,30 +157,12 @@ const Instagram = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setError("Please login to continue");
-        setLoading(false);
         return;
       }
-  
-      const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) {
-        setError("Invalid token format");
-        setLoading(false);
-        return;
-      }
-  
-      let userId;
-      try {
-        const tokenPayload = JSON.parse(atob(tokenParts[1]));
-        userId = tokenPayload.id;
-        if (!userId) {
-          throw new Error("No user ID in token");
-        }
-      } catch (err) {
-        setError("Invalid token");
-        setLoading(false);
-        return;
-      }
-  
+
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const userId = tokenPayload.id;
+
       const keywordsArray = formData.keywords
         .split(',')
         .map(keyword => keyword.trim())
@@ -207,9 +174,7 @@ const Instagram = () => {
         tone: selectedTones,
         keywords: keywordsArray
       }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
   
       const { post, suggestedPostingTime } = response.data;
@@ -224,12 +189,7 @@ const Instagram = () => {
   
       setShowOutput(true);
     } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        setError("Session expired. Please login again");
-      } else {
-        setError(err.response?.data?.error || "Failed to generate content. Please try again.");
-      }
-      console.error("Error generating content:", err);
+      setError("Failed to generate content. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -239,13 +199,11 @@ const Instagram = () => {
     try {
       const token = localStorage.getItem('token');
       await api.put(`/api/v1/posts/queue/${postId}`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
       navigate('/media');
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to queue post");
+      setError("Failed to queue post");
     }
   };
 
@@ -255,14 +213,12 @@ const Instagram = () => {
       await api.put(`/api/v1/posts/schedule/${postId}`, {
         scheduledDate: dateTime
       }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
       setShowScheduleModal(false);
       navigate('/media');
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to schedule post");
+      setError("Failed to schedule post");
     }
   };
 

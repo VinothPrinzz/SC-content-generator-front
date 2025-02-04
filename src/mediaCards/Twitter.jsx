@@ -6,11 +6,27 @@ import { useNavigate } from 'react-router-dom';
 const ScheduleModal = ({ isOpen, onClose, onSchedule, postId }) => {
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
+  const [error, setError] = useState("");
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const dateTime = new Date(`${scheduleDate}T${scheduleTime}`);
-    await onSchedule(postId, dateTime);
+    try {
+      if (!scheduleDate || !scheduleTime) {
+        setError("Please select both date and time");
+        return;
+      }
+
+      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+      if (scheduledDateTime < new Date()) {
+        setError("Cannot schedule for a past date/time");
+        return;
+      }
+
+      await onSchedule(postId, scheduledDateTime.toISOString());
+      onClose();
+    } catch (error) {
+      setError("Failed to schedule post");
+    }
   };
 
   if (!isOpen) return null;
@@ -18,10 +34,7 @@ const ScheduleModal = ({ isOpen, onClose, onSchedule, postId }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
           <X size={20} />
         </button>
         
@@ -50,6 +63,12 @@ const ScheduleModal = ({ isOpen, onClose, onSchedule, postId }) => {
               required
             />
           </div>
+
+          {error && (
+            <div className="text-red-500 text-sm p-2 bg-red-50 rounded">
+              {error}
+            </div>
+          )}
           
           <button
             type="submit"
@@ -94,40 +113,26 @@ const Twitter = () => {
   });
 
   const industries = [
-    "Technology",
-    "Fashion",
-    "Food & Beverage",
-    "Health & Wellness",
-    "Travel",
-    "Education",
-    "Other"
+    "Technology", "Fashion", "Food & Beverage", "Health & Wellness",
+    "Travel", "Education", "Other"
   ];
 
   const tones = [
-    "Professional",
-    "Casual",
-    "Humorous",
-    "Inspirational",
-    "Educational",
-    "Promotional",
-    "Other"
+    "Professional", "Casual", "Humorous", "Inspirational",
+    "Educational", "Promotional", "Other"
   ];
 
   const handleAddTag = (value, type) => {
     if (!value.trim()) return;
     
-    if (type === 'industry') {
-      if (!selectedIndustries.includes(value.trim())) {
-        setSelectedIndustries([...selectedIndustries, value.trim()]);
-        setIndustryInput("");
-        setIsIndustryOpen(false);
-      }
-    } else {
-      if (!selectedTones.includes(value.trim())) {
-        setSelectedTones([...selectedTones, value.trim()]);
-        setToneInput("");
-        setIsToneOpen(false);
-      }
+    if (type === 'industry' && !selectedIndustries.includes(value.trim())) {
+      setSelectedIndustries([...selectedIndustries, value.trim()]);
+      setIndustryInput("");
+      setIsIndustryOpen(false);
+    } else if (!selectedTones.includes(value.trim())) {
+      setSelectedTones([...selectedTones, value.trim()]);
+      setToneInput("");
+      setIsToneOpen(false);
     }
   };
 
@@ -150,7 +155,6 @@ const Twitter = () => {
       }
       return;
     }
-    
     handleAddTag(option, type);
   };
 
@@ -172,30 +176,12 @@ const Twitter = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setError("Please login to continue");
-        setLoading(false);
         return;
       }
-  
-      const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) {
-        setError("Invalid token format");
-        setLoading(false);
-        return;
-      }
-  
-      let userId;
-      try {
-        const tokenPayload = JSON.parse(atob(tokenParts[1]));
-        userId = tokenPayload.id;
-        if (!userId) {
-          throw new Error("No user ID in token");
-        }
-      } catch (err) {
-        setError("Invalid token");
-        setLoading(false);
-        return;
-      }
-  
+
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const userId = tokenPayload.id;
+
       const keywordsArray = formData.keywords
         .split(',')
         .map(keyword => keyword.trim())
@@ -207,9 +193,7 @@ const Twitter = () => {
         tone: selectedTones,
         keywords: keywordsArray
       }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
   
       const { post, suggestedPostingTime } = response.data;
@@ -224,12 +208,7 @@ const Twitter = () => {
   
       setShowOutput(true);
     } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        setError("Session expired. Please login again");
-      } else {
-        setError(err.response?.data?.error || "Failed to generate content. Please try again.");
-      }
-      console.error("Error generating content:", err);
+      setError("Failed to generate content. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -239,13 +218,11 @@ const Twitter = () => {
     try {
       const token = localStorage.getItem('token');
       await api.put(`/api/v1/posts/queue/${postId}`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
       navigate('/media');
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to queue post");
+      setError("Failed to queue post");
     }
   };
 
@@ -253,19 +230,20 @@ const Twitter = () => {
     try {
       const token = localStorage.getItem('token');
       await api.put(`/api/v1/posts/schedule/${postId}`, {
-        scheduledDate: dateTime
+        scheduledTime: dateTime,
+        schedule: true
       }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
-      setShowScheduleModal(false);
       navigate('/media');
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to schedule post");
+      throw new Error("Failed to schedule post");
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-pink-50 p-6">
       <button

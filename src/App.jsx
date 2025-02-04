@@ -10,6 +10,7 @@ import Stats from "./sidebarComponets/Stats";
 import EditPost from './EditPost'
 import Schedule from "./sidebarComponets/Schedule";
 import Analytics from "./sidebarComponets/Analysis";
+import SocialAccounts from "./sidebarComponets/SocialAccount";
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/media/instagram" element={<Instagram />} />
         <Route path="/media/twitter" element={<Twitter />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/social-accounts" element={<SocialAccounts />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

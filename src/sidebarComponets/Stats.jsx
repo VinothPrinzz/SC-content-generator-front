@@ -12,14 +12,12 @@ import api from '../api/axios';
 import Sidebar from "../components/Sidebar";
 import TopNavbar from '../components/TopNavbar';
 
-// Keep the StatCard and generateRandomData functions the same
 const generateRandomData = (points, baseValue) => {
   return Array.from({ length: points }, (_, i) => ({
     name: `Day ${i + 1}`,
     value: Math.max(
       0,
-      baseValue +
-        Math.floor(Math.random() * (baseValue * 0.4) - baseValue * 0.2)
+      baseValue + Math.floor(Math.random() * (baseValue * 0.4) - baseValue * 0.2)
     ),
   }));
 };
@@ -73,10 +71,6 @@ const Stats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -90,16 +84,19 @@ const Stats = () => {
       });
 
       setUserData(userResponse.data);
-      setLoading(false);
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      setError(error.message);
-      setLoading(false);
-      if (error.response?.status === 401 || error.response?.status === 403) {
+      setError('Failed to load user data');
+      if (error.response?.status === 401) {
         navigate('/');
       }
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   const stats = [
     {
@@ -163,7 +160,6 @@ const Stats = () => {
   return (
     <div className="flex h-screen bg-white">
       <Sidebar userData={userData} />
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <TopNavbar setShowCreateModal={setShowCreateModal} />
         <div className="border-b p-4">
@@ -181,6 +177,11 @@ const Stats = () => {
         </div>
 
         <div className="p-6">
+          {error && (
+            <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <StatCard
