@@ -2,5 +2,12 @@ services:
   - type: web
     name: sc-content-generator-front
     buildCommand: npm install && npm run build
-    publishDir: /dist
     staticPublishPath: /dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

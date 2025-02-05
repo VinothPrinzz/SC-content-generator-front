@@ -5,7 +5,7 @@ const SocialAuthModal = ({ isOpen, onClose }) => {
   const handleTwitterAuth = () => {
     const token = localStorage.getItem('token');
     if (token) {
-      window.location.href = `http://localhost:3000/api/v1/auth/twitter?token=${token}`;
+      window.location.href = `https://sc-content-generator-back.onrender.com/api/v1/auth/twitter?token=${token}`;
     } else {
       onClose();
     }
