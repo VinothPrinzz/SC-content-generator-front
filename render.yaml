@@ -3,11 +3,7 @@ services:
     name: sc-content-generator-front
     env: static
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    headers:
-      /**:
-        - name: Cache-Control
-          value: no-store
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*
