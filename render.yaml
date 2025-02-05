@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: sc-content-generator-front
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    staticPublishPath: ./dist
+    staticHeaders:
+      - path: /*
+        headers:
+          - key: Cache-Control
+            value: public, max-age=0, must-revalidate
